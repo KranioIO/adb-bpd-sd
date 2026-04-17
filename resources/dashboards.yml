@@ -1,0 +1,6 @@
+resources:
+  dashboards:
+    nba_performance_dashboard:
+      display_name: "NBA Model Performance"
+      # Ruta al archivo JSON que descargaste de Databricks
+      file_path: ../dashboards/nba_dashboard.json
