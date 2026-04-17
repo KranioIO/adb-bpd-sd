@@ -22,10 +22,15 @@ mlflow.set_registry_uri("databricks-uc")
 with mlflow.start_run() as run:
     model = LinearRegression().fit(X, y)
     
-    # Log del modelo
+    # OPCIÓN RECOMENDADA: Inferir la firma usando un ejemplo de entrada
+    # Tomamos una pequeña muestra de X (ej. las primeras 5 filas)
+    input_example = X.head(5)
+    
+    # Log del modelo con la firma incluida
     mlflow.sklearn.log_model(
-        model, 
-        "model", 
+        sk_model=model, 
+        artifact_path="model", 
+        input_example=input_example, # <--- ESTO ES LO QUE FALTA
         registered_model_name=f"{catalog}.default.house_model"
     )
     
