@@ -1,0 +1,6 @@
+resources:
+  queries:
+    test_data_science:
+      display_name: "test data science"
+      query_text: |
+        
