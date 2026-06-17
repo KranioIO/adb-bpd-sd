@@ -66,8 +66,10 @@ with mlflow.start_run() as run:
 
     # 5. Persistencia de Resultados
     spark_df = spark.createDataFrame(results_df)
-    
-    # Guardar en Volumen (Archivo físico Parquet)
+
+    # Opción A: Guardar como archivo Parquet en el Volumen
+    spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog}.default.model_outputs")
+
     file_destination = f"{output_path}/house_predictions.parquet"
     spark_df.write.mode("overwrite").parquet(file_destination)
     
