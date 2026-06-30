@@ -6,9 +6,15 @@ from mlflow import MlflowClient
 mlflow.set_registry_uri("databricks-uc")
 client = MlflowClient()
 
-# 2. Origen y destino fijos
-origen = "dev_catalog.default.house_model"
-destino = "qa_catalog.default.house_model_qa"
+# 2. Configuración Dinámica (Se adapta a CUALQUIER modelo y CUALQUIER catálogo)
+# GitHub Actions inyectará estos valores automáticamente
+catalogo_origen = os.getenv("ORIGIN_CATALOG", "dev_catalog")
+catalogo_destino = os.getenv("ENV_CATALOG", "qa_catalog")
+nombre_modelo = os.getenv("MODEL_NAME", "house_model") # Nombre base del modelo sin catálogos
+
+# Construimos las rutas de Unity Catalog de 3 niveles de forma dinámica
+origen = f"{catalogo_origen}.default.{nombre_modelo}"
+destino = f"{catalogo_destino}.default.{nombre_modelo}_qa"
 
 print(f"🤖 Buscando el modelo @champion en {origen}...")
 
@@ -26,24 +32,22 @@ try:
     # 5. Descargar los artefactos originales
     carpeta_temporal = mlflow.artifacts.download_artifacts(artifact_uri=ruta_modelo_uc)
     
-    # 6. LA SOLUCIÓN: Apuntar a la subcarpeta 'model' interna para aislar los archivos puros
-    # Esto evita arrastrar el archivo 'MLmodel' viejo que tiene el ID bloqueado de DEV
+    # 6. Solución al ID bloqueado: Aislar los archivos puros (Sirve para Sklearn, LangChain, etc.)
     ruta_archivos_puros = os.path.join(carpeta_temporal, "model")
     if not os.path.exists(ruta_archivos_puros):
-        ruta_archivos_puros = carpeta_temporal # Por si no tuviera subcarpeta
+        ruta_archivos_puros = carpeta_temporal
 
-    # Mapeamos los archivos puros como un diccionario de artefactos genérico
     artefactos_genericos = {"model_files": ruta_archivos_puros}
     
-    # 7. Registrar usando un modelo Wrapper genérico (PythonModel base)
+    # 7. Registrar usando el contenedor universal (Acepta cualquier tipo de modelo/agente)
     print(f"🚀 Promoviendo de forma 100% limpia y genérica a: {destino}")
     with mlflow.start_run():
         mlflow.pyfunc.log_model(
             artifact_path="model",
-            artifacts=artefactos_genericos, # <--- Pasamos los archivos puros aquí
+            artifacts=artefactos_genericos, 
             signature=firma_original,
             registered_model_name=destino,
-            python_model=mlflow.pyfunc.PythonModel() # <--- Un modelo vacío genérico que solo sirve de contenedor
+            python_model=mlflow.pyfunc.PythonModel() 
         )
     
     print(f"🎉 ¡Promoción completada con éxito hacia: {destino}!")
