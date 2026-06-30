@@ -1,0 +1,12 @@
+{
+  "create_time":"2026-04-17T15:55:29Z",
+  "display_name":"test data science",
+  "id":"1459bf27-a84b-48ee-a57d-a32b42d156f0",
+  "last_modifier_user_name":"stephane@kranio.io",
+  "lifecycle_state":"ACTIVE",
+  "owner_user_name":"stephane@kranio.io",
+  "parent_path":"/Workspace/Users/stephane@kranio.io",
+  "query_text":"",
+  "run_as_mode":"OWNER",
+  "update_time":"2026-04-17T18:51:18Z"
+}

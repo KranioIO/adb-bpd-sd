@@ -1,0 +1,106 @@
+{
+  "datasets": [
+    {
+      "name": "72eb3e0c",
+      "displayName": "Dataset_Predicciones_NBA",
+      "queryLines": [
+        "SELECT \n",
+        "  execution_date,\n",
+        "  sqft,\n",
+        "  price_predicted,\n",
+        "  -- Etiqueta de validación para los colores del gráfico\n",
+        "  CASE \n",
+        "    WHEN price_predicted < 0 THEN 'Error: Precio Negativo'\n",
+        "    WHEN price_predicted > 1000 THEN 'Alerta: Valor Atípico'\n",
+        "    ELSE 'OK'\n",
+        "  END AS validation_status\n",
+        "FROM ${var.catalog_name}.default.ma_table_scores\n",
+        "ORDER BY execution_date DESC"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "f6531838",
+      "displayName": "Untitled page",
+      "layout": [
+        {
+          "widget": {
+            "name": "9a2740d2",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "72eb3e0c",
+                  "fields": [
+                    {
+                      "name": "validation_status",
+                      "expression": "`validation_status`"
+                    },
+                    {
+                      "name": "sqft",
+                      "expression": "`sqft`"
+                    },
+                    {
+                      "name": "avg(price_predicted)",
+                      "expression": "AVG(`price_predicted`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Predicciones de Precios",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sqft",
+                  "displayName": "Fecha de Ejecución",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "avg(price_predicted)",
+                  "displayName": "Precio Predicho",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "validation_status",
+                  "displayName": "Estado de Validación",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 6,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}

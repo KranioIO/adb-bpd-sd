@@ -1,21 +1,12 @@
 bundle:
-  name: projet-cientificos
-
-variables:
-  target_catalog:
-    default: main_dev
+  name: proyecto_ml
 
 include:
   - resources/*.yml
-  - resources/*.json
 
-sync:
-  include:
-    - notebooks/** # Solo incluye esta carpeta y todo su contenido
-  exclude:
-    - .github/** # No queremos el historial de git en el workspace
-    - catalog/** # No queremos archivos del editor
-    - volume/**         # No queremos archivos basura de Python
+variables:
+  catalog_name:
+    default: dev_catalog
 
 targets:
   dev:
@@ -24,6 +15,8 @@ targets:
     workspace:
       host: https://adb-1194260751860413.13.azuredatabricks.net
       root_path: /Shared/${bundle.name}
+    variables:
+      catalog_name: dev_catalog
    # run_as:
    #   service_principal_name: "a963eeab-b3eb-44fc-87c5-8365bf6a0a42"
 
@@ -33,5 +26,5 @@ targets:
       host: https://adb-1832665218446849.9.azuredatabricks.net
       root_path: /Shared/${bundle.name}/${bundle.target}
     variables:
-      target_catalog: main_qa
+      catalog_name: qa_catalog
       

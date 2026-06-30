@@ -1,0 +1,6 @@
+resources:
+  dashboards:
+    nba_monitoreo_de_predicciones:
+      display_name: "[NBA] Monitoreo de Predicciones"
+      file_path: ../../dashboards/nba_monitoreo_de_predicciones.json
+      warehouse_id: ${var.warehouse_id}
