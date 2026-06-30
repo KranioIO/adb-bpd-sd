@@ -1,7 +1,7 @@
 name: Promocion-QA-Simple
 
 on:
-  pull_request:
+  push:
     branches:
       - release
 
