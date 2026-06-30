@@ -6,7 +6,7 @@ mlflow.set_registry_uri("databricks-uc")
 client = MlflowClient()
 
 # 2. Origen y destino fijos (Sin condiciones)
-origen = "dev_catalog.default.house_model_qa"
+origen = "dev_catalog.default.house_model"
 destino = "qa_catalog.default.house_model_qa"  # Cambia esto al catálogo que necesites probar
 
 print(f"🤖 Buscando el modelo @champion en {origen}...")
