@@ -1,0 +1,31 @@
+name: Promocion-QA-Simple
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  promote-to-qa:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 1. Descargar codigo
+      uses: actions/checkout@v4
+
+    - name: 2. Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: 3. Instalar librerias
+      run: |
+        pip install mlflow databricks-sdk pandas scikit-learn
+
+    - name: 4. Ejecutar la grúa de MLflow
+      env:
+        ENV_CATALOG: "qa_catalog"
+        DATABRICKS_HOST: ${{ secrets.DB_HOST_QA }}
+        DATABRICKS_TOKEN: ${{ secrets.DB_TOKEN_QA }}
+      run: |
+        python src/2_promocion.py
