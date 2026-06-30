@@ -1,0 +1,58 @@
+name: MLOps - Promoción de Modelos (Unity Catalog)
+
+on:
+  # Permite ejecutarlo manualmente desde la pestaña 'Actions' de GitHub para probar
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Entorno de destino (qa o prod)'
+        required: true
+        default: 'qa'
+        type: choice
+        options:
+          - qa
+          - prod
+
+  # O se ejecuta automáticamente al fusionar código en ramas específicas
+  push:
+    branches:
+      - qa
+      - main # (prod)
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 1. Descargar el código del repositorio
+      uses: actions/checkout@v4
+
+    - name: 2. Configurar Python en el corredor
+      uses: actions/setup-python@v5
+      with:
+        python-python: '3.10'
+        cache: 'pip'
+
+    - name: 3. Instalar dependencias necesarias
+      run: |
+        pip install --upgrade pip
+        pip install mlflow databricks-sdk pandas scikit-learn
+
+    - name: 4. Configurar variables de entorno según el destino
+      id: set-env
+      run: |
+        # Determinar el entorno basado en el trigger (manual o por rama)
+        TRIGGER_ENV="${{ github.event.inputs.environment }}"
+        if [ "${{ github.ref_name }}" = "qa" ] || [ "$TRIGGER_ENV" = "qa" ]; then
+          echo "ENV_CATALOG=qa_catalog" >> $GITHUB_ENV
+          echo "DATABRICKS_HOST=${{ secrets.DB_HOST_QA }}" >> $GITHUB_ENV
+          echo "DATABRICKS_TOKEN=${{ secrets.DB_TOKEN_QA }}" >> $GITHUB_ENV
+        elif [ "${{ github.ref_name }}" = "main" ] || [ "$TRIGGER_ENV" = "prod" ]; then
+          echo "ENV_CATALOG=enriched" >> $GITHUB_ENV
+          echo "DATABRICKS_HOST=${{ secrets.DB_HOST_PROD }}" >> $GITHUB_ENV
+          echo "DATABRICKS_TOKEN=${{ secrets.DB_TOKEN_PROD }}" >> $GITHUB_ENV
+        fi
+
+    - name: 5. Ejecutar la Grúa de MLflow (Tu script de Python)
+      run: |
+        python tu_script_de_registro.py
