@@ -6,7 +6,7 @@ from mlflow import MlflowClient
 mlflow.set_registry_uri("databricks-uc")
 client = MlflowClient()
 
-# 2. Configuración Dinámica (Se adapta a cualquier modelo y catálogo)
+# 2. Configuración Dinámica
 catalogo_origen = os.getenv("ORIGIN_CATALOG", "dev_catalog")
 catalogo_destino = os.getenv("ENV_CATALOG", "qa_catalog")
 nombre_modelo = os.getenv("MODEL_NAME", "house_model")
@@ -22,15 +22,13 @@ try:
     numero_version = version_champion.version
     print(f"🏆 Encontrada la versión {numero_version} en {origen}.")
 
-    # 4. COPIAR LA VERSIÓN DIRECTAMENTE ENTRE CATÁLOGOS (La solución nativa)
-    # Este comando es 100% genérico. Copia cualquier framework (LangChain, Sklearn, etc.)
-    # porque Databricks duplica el artefacto directamente en el almacenamiento de la nube.
+    # 4. COPIAR LA VERSIÓN DIRECTAMENTE ENTRE CATÁLOGOS (API Corregida)
     print(f"🚀 Copiando físicamente el modelo vía Unity Catalog hacia: {destino}...")
     
     nueva_version = client.copy_model_version(
-        src_model_name=origen,
-        src_model_version=numero_version,
-        dst_model_name=destino
+        name=origen,          # Nombre del modelo origen
+        version=numero_version, # Versión origen
+        dst_name=destino      # Nombre del modelo destino
     )
     
     print(f"🎉 ¡PROMOCIÓN COMPLETADA CON ÉXITO! Nueva versión creada en QA: {nueva_version.version}")
