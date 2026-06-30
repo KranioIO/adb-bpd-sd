@@ -5,25 +5,37 @@ from mlflow import MlflowClient
 mlflow.set_registry_uri("databricks-uc")
 client = MlflowClient()
 
-# 2. Definir origen fijo (DEV) y destino fijo (QA)
-origen = "dev_catalog.default.house_model"
-destino = "main_qa.default.house_model_qa"
+# 2. Origen y destino fijos (Sin condiciones)
+origen = "dev_catalog.default.house_model_qa"
+destino = "qa_catalog.default.house_model_qa"  # Cambia esto al catálogo que necesites probar
 
-print(f"🤖 Buscando modelo @champion en {origen}...")
+print(f"🤖 Buscando el modelo @champion en {origen}...")
 
 try:
-    # 3. Obtener la versión con el alias @champion
+    # 3. Buscar la versión campeón en el origen
     version_champion = client.get_model_version_by_alias(origen, "champion")
     numero_version = version_champion.version
+    print(f"🏆 Encontrada la versión {numero_version}.")
+
+    # 4. Obtener la RUTA y la FIRMA original (Válido para cualquier tipo de modelo)
+    ruta_modelo_uc = f"models:/{origen}/{numero_version}"
+    firma_original = mlflow.models.get_model_info(ruta_modelo_uc).signature
+    print("✍️ Firma original del modelo recuperada con éxito.")
+
+    # 5. Descargar los artefactos originales a la máquina de GitHub Actions
+    carpeta_temporal = mlflow.artifacts.download_artifacts(artifact_uri=ruta_modelo_uc)
     
-    # 4. Ruta directa del modelo en DEV
-    uri_modelo_origen = f"models:/{origen}/{numero_version}"
+    # 6. Registrar usando 'pyfunc' (El sabor universal de MLflow)
+    print(f"🚀 Promoviendo modelo de forma genérica a: {destino}")
+    with mlflow.start_run():
+        mlflow.pyfunc.log_model(
+            artifact_path="model",
+            data_path=carpeta_temporal, # Le pasamos la carpeta descargada tal cual
+            signature=firma_original,   # Inyectamos su firma original
+            registered_model_name=destino
+        )
     
-    # 5. Registrar directamente en QA usando la URI de origen
-    print(f"🚀 Promoviendo directamente a: {destino}")
-    mlflow.register_model(model_uri=uri_modelo_origen, name=destino)
-    
-    print("🎉 ¡Promoción a QA completada con éxito!")
+    print(f"🎉 ¡Promoción completada con éxito hacia: {destino}!")
 
 except Exception as e:
-    print(f"❌ Error: {e}")
+    print(f"❌ Error al intentar promover el modelo: {e}")
