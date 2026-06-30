@@ -1,4 +1,5 @@
 import os
+import shutil
 import mlflow
 from mlflow import MlflowClient
 
@@ -22,28 +23,41 @@ try:
     numero_version = version_champion.version
     print(f"🏆 Encontrada la versión {numero_version}.")
 
-    # 4. Obtener la información de la versión
-    informacion_version = client.get_model_version(origen, numero_version)
+    # 4. Obtener la firma original del modelo
+    ruta_modelo_uc = f"models:/{origen}/{numero_version}"
+    firma_original = mlflow.models.get_model_info(ruta_modelo_uc).signature
+    print("✍️ Firma original del modelo recuperada con éxito.")
+
+    # 5. Descargar los artefactos originales a la máquina de GitHub Actions
+    print("⏳ Descargando artefactos físicamente desde el origen...")
+    carpeta_temporal = mlflow.artifacts.download_artifacts(artifact_uri=ruta_modelo_uc)
     
-    # EXTRAEMOS EL RUN ID ORIGINAL (Donde nació el modelo antes de UC)
-    run_id_original = informacion_version.run_id
+    # 6. LA MAGIA: Romper el rastreo eliminando el archivo MLmodel original
+    # Esto evita que arrastre el ID oculto de DEV ('m-...') o el Run ID viejo
+    archivo_mlmodel_viejo = os.path.join(carpeta_temporal, "MLmodel")
+    if os.path.exists(archivo_mlmodel_viejo):
+        os.remove(archivo_mlmodel_viejo)
+        print("🧹 Eliminada la metadata vieja con IDs bloqueados de DEV.")
+
+    # Apuntar a los archivos puros del modelo (la subcarpeta 'model')
+    ruta_archivos_puros = os.path.join(carpeta_temporal, "model")
+    if not os.path.exists(ruta_archivos_puros):
+        ruta_archivos_puros = carpeta_temporal
+
+    artefactos_genericos = {"model_files": ruta_archivos_puros}
     
-    # 5. CONSTRUIMOS LA RUTA FÍSICA INMUTABLE DEL EXPERIMENTO
-    # Esto apunta directamente al almacenamiento raíz (S3/Azure Blob/DBFS) 
-    # y no al ID lógico 'm-...' de Unity Catalog que causa el bloqueo.
-    ruta_fisica_inmutable = f"runs:/{run_id_original}/model"
+    # 7. Registrar limpiamente en el Model Registry de QA usando pyfunc universal
+    print(f"🚀 Promoviendo una copia limpia y genérica hacia: {destino}")
+    with mlflow.start_run():
+        mlflow.pyfunc.log_model(
+            artifact_path="model",
+            artifacts=artefactos_genericos, 
+            signature=firma_original,
+            registered_model_name=destino,
+            python_model=mlflow.pyfunc.PythonModel() # Contenedor universal genérico
+        )
     
-    print(f"📦 Ruta física inmutable del experimento detectada: {ruta_fisica_inmutable}")
-    print(f"🚀 Promoviendo y registrando versión en el destino de forma genérica: {destino}...")
-    
-    # 6. Registrar la versión usando la ruta del Run original
-    # Es 100% compatible con cualquier framework (LangChain, Sklearn, etc.)
-    nueva_version = client.create_model_version(
-        name=destino,
-        source=ruta_fisica_inmutable
-    )
-    
-    print(f"🎉 ¡Promoción completada con éxito! Nueva versión creada en QA: {nueva_version.version}")
+    print(f"🎉 ¡Promoción completada con éxito hacia: {destino}!")
 
 except Exception as e:
     print(f"❌ Error al intentar promover el modelo: {e}")
