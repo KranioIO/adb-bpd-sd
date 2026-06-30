@@ -7,7 +7,7 @@ client = MlflowClient()
 
 # 2. Definir origen fijo (DEV) y destino fijo (QA)
 origen = "dev_catalog.default.house_model"
-destino = "qa_catalog.default.house_model_qa"
+destino = "main_qa.default.house_model_qa"
 
 print(f"🤖 Buscando modelo @champion en {origen}...")
 
