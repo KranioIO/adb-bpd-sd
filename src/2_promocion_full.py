@@ -11,12 +11,12 @@ client = MlflowClient()
 # 2. Configurar nombres de catálogos
 catalogo_destino = os.getenv("ENV_CATALOG", "qa_catalog")
 
-if catalogo_destino == "qa_catalog" or catalogo_destino == "enriched_qa":
+if catalogo_destino == "qa_catalog" or catalogo_destino == "prd_catalog":
     origen = "dev_catalog.default.house_model"
     destino = f"{catalogo_destino}.default.house_model_qa"
 elif catalogo_destino == "enriched":
-    origen = "enriched_qa.default.house_model_qa"
-    destino = "enriched.default.house_model_prod"
+    origen = "dev_catalog.default.house_model_qa"
+    destino = "prd_catalog.default.house_model_prod"
 
 print(f"🤖 Activando grúa... Buscando el modelo @champion en {origen}")
 
@@ -46,7 +46,7 @@ try:
         mlflow.sklearn.log_model(
             sk_model=modelo_cargado,
             artifact_path="model",
-            signature=firma_obligatoria, # <-- Le pegamos la firma aquí
+            signature=firma_obligatoria,
             registered_model_name=destino
         )
     

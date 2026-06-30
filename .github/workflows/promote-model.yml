@@ -29,4 +29,4 @@ jobs:
         DATABRICKS_HOST: ${{ secrets.DB_HOST_QA }}
         DATABRICKS_TOKEN: ${{ secrets.DB_TOKEN_QA }}
       run: |
-        python src/2_promocion.py
+        python src/2_promocion_full.py
