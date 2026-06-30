@@ -6,7 +6,7 @@ from mlflow import MlflowClient
 mlflow.set_registry_uri("databricks-uc")
 client = MlflowClient()
 
-# 2. Configuración Dinámica (Se adapta a cualquier modelo y catálogo)
+# 2. Configuración Dinámica
 catalogo_origen = os.getenv("ORIGIN_CATALOG", "dev_catalog")
 catalogo_destino = os.getenv("ENV_CATALOG", "qa_catalog")
 nombre_modelo = os.getenv("MODEL_NAME", "house_model")
@@ -22,22 +22,28 @@ try:
     numero_version = version_champion.version
     print(f"🏆 Encontrada la versión {numero_version}.")
 
-    # 4. Obtener la ruta de almacenamiento físico original del modelo
-    informacion_modelo = client.get_model_version(origen, numero_version)
-    ruta_fisica_origen = informacion_modelo.source
+    # 4. Obtener la información de la versión
+    informacion_version = client.get_model_version(origen, numero_version)
     
-    print(f"📦 Ruta física de origen detectada: {ruta_fisica_origen}")
-    print(f"🚀 Clonando y registrando versión en el destino: {destino}...")
+    # EXTRAEMOS EL RUN ID ORIGINAL (Donde nació el modelo antes de UC)
+    run_id_original = informacion_version.run_id
     
-    # 5. CREAR LA VERSIÓN DIRECTAMENTE EN EL MODEL REGISTRY DE DESTINO
-    # Esto es 100% genérico. No importa si es Sklearn o un Agente LangChain.
-    # Toma los archivos de la ruta física y los registra de forma limpia en QA.
+    # 5. CONSTRUIMOS LA RUTA FÍSICA INMUTABLE DEL EXPERIMENTO
+    # Esto apunta directamente al almacenamiento raíz (S3/Azure Blob/DBFS) 
+    # y no al ID lógico 'm-...' de Unity Catalog que causa el bloqueo.
+    ruta_fisica_inmutable = f"runs:/{run_id_original}/model"
+    
+    print(f"📦 Ruta física inmutable del experimento detectada: {ruta_fisica_inmutable}")
+    print(f"🚀 Promoviendo y registrando versión en el destino de forma genérica: {destino}...")
+    
+    # 6. Registrar la versión usando la ruta del Run original
+    # Es 100% compatible con cualquier framework (LangChain, Sklearn, etc.)
     nueva_version = client.create_model_version(
         name=destino,
-        source=ruta_fisica_origen
+        source=ruta_fisica_inmutable
     )
     
-    print(f"🎉 ¡Promoción completada con éxito! Nueva versión creada: {nueva_version.version}")
+    print(f"🎉 ¡Promoción completada con éxito! Nueva versión creada en QA: {nueva_version.version}")
 
 except Exception as e:
     print(f"❌ Error al intentar promover el modelo: {e}")
