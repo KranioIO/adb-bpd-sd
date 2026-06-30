@@ -22,14 +22,14 @@ try:
     numero_version = version_champion.version
     print(f"🏆 Encontrada la versión {numero_version} en {origen}.")
 
-    # 4. COPIAR LA VERSIÓN DIRECTAMENTE ENTRE CATÁLOGOS (API Corregida)
+    # 4. Construir la URI exacta del modelo de origen
+    uri_modelo_origen = f"models:/{origen}/{numero_version}"
+
+    # 5. COPIAR LA VERSIÓN DIRECTAMENTE ENTRE CATÁLOGOS (Argumentos posicionales correctos)
     print(f"🚀 Copiando físicamente el modelo vía Unity Catalog hacia: {destino}...")
     
-    nueva_version = client.copy_model_version(
-        name=origen,          # Nombre del modelo origen
-        version=numero_version, # Versión origen
-        dst_name=destino      # Nombre del modelo destino
-    )
+    # Pasamos los dos strings directamente sin 'name=' ni 'dst_name='
+    nueva_version = client.copy_model_version(uri_modelo_origen, destino)
     
     print(f"🎉 ¡PROMOCIÓN COMPLETADA CON ÉXITO! Nueva versión creada en QA: {nueva_version.version}")
 
