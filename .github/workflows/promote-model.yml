@@ -20,7 +20,8 @@ jobs:
 
     - name: 3. Instalar librerias
       run: |
-        pip install mlflow databricks-sdk pandas scikit-learn
+        pip install --upgrade pip
+        pip install "mlflow[databricks]" databricks-sdk pandas scikit-learn
 
     - name: 4. Ejecutar la grúa de MLflow
       env:
