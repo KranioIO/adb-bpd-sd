@@ -46,7 +46,7 @@ try:
         mlflow.sklearn.log_model(
             sk_model=modelo_cargado,
             artifact_path="model",
-            signature=firma_obligatoria,
+            #signature=firma_obligatoria,
             registered_model_name=destino
         )
     
